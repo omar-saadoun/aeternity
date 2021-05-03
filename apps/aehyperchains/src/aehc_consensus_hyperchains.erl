@@ -124,6 +124,7 @@
     }).
 
 can_be_turned_off() -> true.
+
 assert_config(_Config) ->
     persistent_term:erase(?STAKING_CONTRACT_ADDR), %% So eunit can simulate node restarts
     %% For now assume that the staking contract can't change during the lifetime of the hyperchain
@@ -173,11 +174,13 @@ assert_config(_Config) ->
     case aeu_env:find_config([<<"hyperchains">>, <<"activation_criteria">>], [user_config]) of
         undefined -> ok;
         {ok, Criteria} ->
-            MinStake = maps:get(<<"minimum_stake">>, Criteria),
-            MinDelegates = maps:get(<<"unique_delegates">>, Criteria),
-            BlockFreq = maps:get(<<"check_frequency">>, Criteria),
-            BlockConfirms = maps:get(<<"confirmation_depth">>, Criteria),
-            _ = set_hc_activation_criteria(MinStake, MinDelegates, BlockFreq, BlockConfirms)
+%%            lager:debug("Trying to set the activation criteria")
+            _MinStake = maps:get(<<"minimum_stake">>, Criteria),
+            _MinDelegates = maps:get(<<"unique_delegates">>, Criteria),
+            _BlockFreq = maps:get(<<"check_frequency">>, Criteria),
+            _BlockConfirms = maps:get(<<"confirmation_depth">>, Criteria),
+%%            _ = set_hc_activation_criteria(MinStake, MinDelegates, BlockFreq, BlockConfirms),
+            lager:debug("Trying to set the activation criteria")
     end,
     ok.
 
@@ -435,10 +438,22 @@ state_pre_transform_key_node(KeyNode, _PrevNode, PrevKeyNode, Trees1) ->
                      end,
             %% Perform the leader election
             ParentHash = get_pos_header_parent_hash(Header),
-            Commitments = aehc_parent_mng:candidates(ParentHash),
+%%            Commitments = aehc_parent_mng:commitments(ParentHash),
+            Commitments = aehc_parent_db:get_candidates_in_election_cycle(aec_headers:height(Header), ParentHash),
+
+
+%%            State = aehc_parent_db:get_parent_block_state(ParentHash), DelegatesState = aehc_parent_trees:delegates(State),
+
+%%            Accounts = [aehc_commitment_header:hc_delegate(aehc_commitment:header(X)) || X <- Commitments],
+%%            Delegates = [begin {value, Delegate} = aehc_delegates_trees:lookup(Account, DelegatesState), Delegate end|| Account <- Accounts],
+
+            Delegates = ["[", lists:join(", ", [aeser_api_encoder:encode(account_pubkey, aehc_commitment_header:hc_delegate(aehc_commitment:header(X))) || X <- Commitments]), "]"],
+
+            lager:info("~nDelegates: ~p ParentHash: ~p~n",[Delegates, ParentHash]),
+
 %%            lager:info("~nParent: ~p ~p~n",[ParentHash, Commitments]),
             %% TODO: actually hardcode the encoding
-            Candidates = ["[", lists:join(", ", [aeser_api_encoder:encode(account_pubkey, aehc_commitment_header:hc_delegate(aehc_commitment:header(X))) || X <- Commitments]), "]"],
+            Candidates = ["[", lists:join(", ", [D || D <- Delegates]), "]"],
             Call = lists:flatten(io_lib:format("get_leader(~s, #~s)", [Candidates, lists:flatten([integer_to_list(X,16) || <<X>> <= ParentHash])])),
             lager:info("Election: ~p\n", [Call]),
             case protocol_staking_contract_call(Trees3, TxEnv, Call) of
@@ -486,11 +501,11 @@ ensure_hc_activation_criteria_at_trees(TxEnv, Trees,
     #activation_criteria{ minimum_delegates = MinimumDelegates
                         , minimum_stake = MinimumStake
                         }) ->
-    case { static_contract_call(Trees, TxEnv, "balance()")
+    try case { static_contract_call(Trees, TxEnv, "balance()")
          , static_contract_call(Trees, TxEnv, "unique_delegates_count()") } of
-        {{ok, _Stake}, {ok, _Delegates}} ->
-            %% TODO (temporary hack, must'n be in production)
-            ok;
+%%        {{ok, _Stake}, {ok, _Delegates}} ->
+%%             TODO (temporary hack, must'n be in production)
+%%            ok;
         {{ok, Stake}, {ok, Delegates}} when Stake >= MinimumStake, Delegates >= MinimumDelegates ->
             ok;
         {{ok, Stake}, _} when Stake < MinimumStake ->
@@ -499,6 +514,10 @@ ensure_hc_activation_criteria_at_trees(TxEnv, Trees,
             {error, not_enough_delegates};
         {Err, _} -> {error, {failed_call, Err}};
         {_, Err} -> {error, {failed_call, Err}}
+    end
+    catch E:R:S ->
+        io:format(user, "~nensure_hc_activation_criteria_at_trees -> ~p ~p ~p~n",[E, R, S]),
+        {error, {E, R}}
     end.
 
 state_pre_transform_micro_node(_Node, _PrevNode, _PrevKeyNode, Trees) -> Trees.
@@ -608,14 +627,13 @@ new_unmined_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol
     end.
 
 new_pos_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol, InfoField, _TreesIn) ->
-    %% NOTE --------------
     %% TODO: PoGF - for now just ignore generational fraud - let's first get a basic version working
     %%       When handling PoGF the commitment point is in a different place than usual
     ok = aehc_utils:submit_commitment(PrevKeyNode, Miner), _ = aehc_utils:confirm_commitment(),
     %% TODO: Miner vs Delegate, Which shall register?
-    {_, ParentBlock} = aehc_parent_mng:pop(),
+    {_, ParentBlock} = aehc_parent_mng:pop(), ParentHash = aehc_parent_block:hash_block(ParentBlock),
 
-    Seal = create_pos_pow_field(aehc_parent_block:hash_block(ParentBlock), ?FAKE_SIGNATURE),
+    Seal = create_pos_pow_field(ParentHash, ?FAKE_SIGNATURE),
     Header = aec_headers:new_key_header(Height,
                            aec_block_insertion:node_hash(PrevNode),
                            aec_block_insertion:node_hash(PrevKeyNode),
@@ -629,6 +647,8 @@ new_pos_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol, In
                            InfoField,
                            Protocol),
     R = aec_chain_state:wrap_header(Header, ?FAKE_BLOCK_HASH),
+    %% TODO To reflect Tx pool in debug (stake should be reflected here)
+    %% TODO To consider stake via config
     lager:info("~nThe new keyblock: (hash: ~p) (time: ~p) (miner: ~p)~n",
         [
             aeser_api_encoder:encode(key_block_hash, aec_headers:prev_key_hash(Header)),
@@ -638,6 +658,7 @@ new_pos_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol, In
     R.
 
 keyblocks_for_unmined_keyblock_adjust() ->
+    %% TODO
     M = fallback_consensus(), lager:info("~nfallback_consensus: ~p~n",[M]), 1.
 %%    max(1, M:keyblocks_for_target_calc()).
 
@@ -696,7 +717,6 @@ next_nonce_for_sealing(?NONCE_HC_ENABLED, _) -> ?NONCE_HC_ENABLED;
 next_nonce_for_sealing(?NONCE_HC_POGF, _) -> ?NONCE_HC_POGF;
 next_nonce_for_sealing(Nonce, MinerConfig) ->
     M = fallback_consensus(),
-    lager:info("~nHere is ~p ~p ~p~n",[M, Nonce, MinerConfig]),
     M:next_nonce_for_sealing(Nonce, MinerConfig).
 
 trim_sealing_nonce(?NONCE_HC_ENABLED, _) -> ?NONCE_HC_ENABLED;
@@ -1027,7 +1047,7 @@ static_staking_contract_call_on_block_hash(BlockHash, Query) ->
 %% Protocol calls at genesis are disallowed - it's impossible for the staking contract to be active at genesis
 protocol_staking_contract_call(Trees0, TxEnv, Query) ->
     Aci = get_staking_contract_aci(),
-    {ok, ContractPubkey} = get_staking_contract_address(),
+    {ok, ContractPubkey} = get_staking_contract_address(), io:format(user, "~nAci: ~p~nQuery: ~p~n",[Aci, Query]),
     {ok, CallData} = aeaci_aci:encode_call_data(Aci, Query),
     Accounts0 = aec_trees:accounts(Trees0),
     SavedAccount = case aec_accounts_trees:lookup(?RESTRICTED_ACCOUNT, Accounts0) of
@@ -1071,3 +1091,5 @@ protocol_staking_contract_call(Trees0, TxEnv, Query) ->
 %% TODO: customize
 fallback_consensus() ->
     aec_consensus_bitcoin_ng.
+
+%% kyiv_1      | 22:14:54.505 [warning] Mnesia activity Type=transaction exit with Reason={aborted,{{badmatch,empty},[{aehc_consensus_hyperchains,new_pos_key_node,8,[{file,"/app/apps/aehyperchains/src/aehc_consensus_hyperchains.erl"},{line,616}]},{aec_chain_state,'-calculate_new_unmined_keyblock/5-fun-0-',5,[{file,"/app/apps/aecore/src/aec_chain_state.erl"},{line,275}]},{aec_db,'-do_activity/2-fun-8-',1,[{file,"/app/apps/aecore/src/aec_db.erl"},{line,1244}]},{mnesia_tm,apply_fun,3,[{file,"mnesia_tm.erl"},{line,842}]},{mnesia_tm,execute_transaction,5,[{file,"mnesia_tm.erl"},{line,818}]},{mnesia,wrap_trans,6,[{file,"mnesia.erl"},{line,495}]},{aec_db,do_activity,2,[{file,"/app/apps/aecore/src/aec_db.erl"},{line,1243}]},{aec_db,try_activity,4,[{file,"/app/apps/aecore/src/aec_db.erl"},{line,1223}]}]}}, retrying

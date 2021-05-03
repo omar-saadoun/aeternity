@@ -13,7 +13,7 @@
          validate/2]).
 
 operations() ->
-    #{'GetContractPoI' =>
+    #{'GetContractCode' =>
       #{get =>
             #{parameters =>
                   [[{"in","query"},
@@ -31,12 +31,127 @@ operations() ->
                      [{"type","string"},
                       {"example",
                        "ct_TV5KbBYdjw1ufKWvAtNNjUnagvRmWMMugFzLKzmLASXB5iH1E"}]}]],
-              path => <<"/v3/contracts/{pubkey}/poi">>,
+              path => <<"/v3/contracts/{pubkey}/code">>,
               responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/PoI">>},
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/ByteCode">>},
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"external">>,<<"contract">>]}},
+  'GetCurrentKeyBlockHash' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/key-blocks/current/hash">>,
+              responses =>
+                  #{200 =>
+                        #{<<"properties">> =>
+                              #{<<"hash">> =>
+                                    #{<<"$ref">> =>
+                                          <<"/components/schemas/EncodedHash">>}},
+                          <<"type">> => <<"object">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"chain">>]}},
+  'GetAccountByPubkey' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","pubkey"},
+                    {"description","The public key of the account"},
+                    {"required",true},
+                    {"schema",
+                     [{"type","string"},
+                      {"example",
+                       "ak_dArxCkAsk1mZB1L9CX3cdz1GDN4hN84L3Q8dMLHN4v8cU85TF"}]}]],
+              path => <<"/v3/accounts/{pubkey}">>,
+              responses =>
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/Account">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"account">>]}},
+  'GetPendingKeyBlock' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/key-blocks/pending">>,
+              responses =>
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/KeyBlock">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"chain">>]}},
+  'PostChannelCreate' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/ChannelCreateTx">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/channels/create">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
+  'GetOracleQueryByPubkeyAndQueryId' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","pubkey"},
+                    {"description","The public key of the oracle"},
+                    {"required",true},
+                    {"schema",
+                     [{"type","string"},
+                      {"example",
+                       "ok_24jcHLTZQfsou7NvomRJ1hKEnjyNqbYSq2Az7DmyrAyUHPq8uR"}]}],
+                   [{"in","path"},
+                    {"name","query-id"},
+                    {"description","The ID of the query"},
+                    {"required",true},
+                    {"type","string"},
+                    {"example",
+                     "oq_q3UrSagF6JfgvAwMiLa6yyEoerx6tQC87m5X8W98NrdDArNZH"}]],
+              path => <<"/v3/oracles/{pubkey}/queries/{query-id}">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/OracleQuery">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"oracle">>]}},
   'GetCurrentKeyBlockHeight' =>
       #{get =>
             #{parameters =>
@@ -57,7 +172,22 @@ operations() ->
                           <<"type">> => <<"object">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"external">>,<<"chain">>]}},
-  'GetAccountByPubkeyAndHeight' =>
+  'GetCurrentKeyBlock' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/key-blocks/current">>,
+              responses =>
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/KeyBlock">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"chain">>]}},
+  'GetOracleByPubkey' =>
       #{get =>
             #{parameters =>
                   [[{"in","query"},
@@ -69,27 +199,72 @@ operations() ->
                     {"default",false}],
                    [{"in","path"},
                     {"name","pubkey"},
-                    {"description","The public key of the account"},
+                    {"description","The public key of the oracle"},
                     {"required",true},
                     {"schema",
                      [{"type","string"},
                       {"example",
-                       "ak_dArxCkAsk1mZB1L9CX3cdz1GDN4hN84L3Q8dMLHN4v8cU85TF"}]}],
-                   [{"in","path"},
-                    {"name","height"},
-                    {"description","The height"},
-                    {"required",true},
-                    {"schema",
-                     [{"type","integer"},
-                      {"minimum",0},
-                      {"maximum",18446744073709552000},
-                      {"example",42}]}]],
-              path => <<"/v3/accounts/{pubkey}/height/{height}">>,
+                       "ok_24jcHLTZQfsou7NvomRJ1hKEnjyNqbYSq2Az7DmyrAyUHPq8uR"}]}]],
+              path => <<"/v3/oracles/{pubkey}">>,
               responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/Account">>},
+                  #{200 =>
+                        #{<<"$ref">> =>
+                              <<"/components/schemas/RegisteredOracle">>},
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"account">>]}},
+              tags => [<<"external">>,<<"oracle">>]}},
+  'GetMicroBlockTransactionsCountByHash' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","hash"},
+                    {"description","The hash of the micro block"},
+                    {"required",true},
+                    {"schema",
+                     [{"type","string"},
+                      {"example",
+                       "mh_ZCWcnCG5YF2LhQMTmZ5K5rRmGxatgc5YWxDpGNy2YBAHP6urH"}]}]],
+              path => <<"/v3/micro-blocks/hash/{hash}/transactions/count">>,
+              responses =>
+                  #{200 =>
+                        #{<<"properties">> =>
+                              #{<<"count">> =>
+                                    #{<<"$ref">> =>
+                                          <<"/components/schemas/UInt32">>}},
+                          <<"type">> => <<"object">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"chain">>]}},
+  'PostOracleExtend' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/OracleExtendTx">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/oracles/extend">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"oracle">>,<<"debug">>]}},
   'GetKeyBlockByHash' =>
       #{get =>
             #{parameters =>
@@ -115,29 +290,7 @@ operations() ->
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"external">>,<<"chain">>]}},
-  'PostChannelDeposit' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/ChannelDepositTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/channels/deposit">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
-  'GetNameEntryByName' =>
+  'GetGenerationByHash' =>
       #{get =>
             #{parameters =>
                   [[{"in","query"},
@@ -148,19 +301,44 @@ operations() ->
                     {"type","boolean"},
                     {"default",false}],
                    [{"in","path"},
-                    {"name","name"},
-                    {"description","The name key of the name entry"},
+                    {"name","hash"},
+                    {"description","The hash of the key block"},
                     {"required",true},
-                    {"type","string"},
-                    {"example","dimitar.chain"}]],
-              path => <<"/v3/names/{name}">>,
+                    {"schema",
+                     [{"type","string"},
+                      {"example",
+                       "kh_2ikjGFZGFpE99mDtsgkGFsTCqpPpXZRNRa5Pic989FJLcJStgx"}]}]],
+              path => <<"/v3/generations/hash/{hash}">>,
               responses =>
                   #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/NameEntry">>},
+                        #{<<"$ref">> => <<"/components/schemas/Generation">>},
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"name_service">>]}},
-  'GetPendingKeyBlock' =>
+              tags => [<<"external">>,<<"chain">>]}},
+  'PostNameTransfer' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/NameTransferTx">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/names/transfer">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"name_service">>,<<"debug">>]}},
+  'GetKeyBlockByHeight' =>
       #{get =>
             #{parameters =>
                   [[{"in","query"},
@@ -169,14 +347,22 @@ operations() ->
                      "If this flag is set to true, the response will have all integers set as strings"},
                     {"required",false},
                     {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/key-blocks/pending">>,
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","height"},
+                    {"description","The height"},
+                    {"required",true},
+                    {"schema",
+                     [{"type","integer"},
+                      {"minimum",0},
+                      {"maximum",18446744073709552000},
+                      {"example",42}]}]],
+              path => <<"/v3/key-blocks/height/{height}">>,
               responses =>
                   #{200 => #{<<"$ref">> => <<"/components/schemas/KeyBlock">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"external">>,<<"chain">>]}},
-  'GetCurrentKeyBlockHash' =>
+  'GetTopHeader' =>
       #{get =>
             #{parameters =>
                   [[{"in","query"},
@@ -186,16 +372,138 @@ operations() ->
                     {"required",false},
                     {"type","boolean"},
                     {"default",false}]],
-              path => <<"/v3/key-blocks/current/hash">>,
+              path => <<"/v3/headers/top">>,
               responses =>
-                  #{200 =>
-                        #{<<"properties">> =>
-                              #{<<"hash">> =>
-                                    #{<<"$ref">> =>
-                                          <<"/components/schemas/EncodedHash">>}},
-                          <<"type">> => <<"object">>},
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/Header">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"external">>,<<"chain">>]}},
+  'DryRunTxs' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"description","transactions"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> => <<"/components/schemas/DryRunInput">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/transactions/dry-run">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> =>
+                              <<"/components/schemas/DryRunResults">>},
+                    403 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"debug">>]}},
+  'GetGenerationByHeight' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","height"},
+                    {"description","The height"},
+                    {"required",true},
+                    {"schema",
+                     [{"type","integer"},
+                      {"minimum",0},
+                      {"maximum",18446744073709552000},
+                      {"example",42}]}]],
+              path => <<"/v3/generations/height/{height}">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/Generation">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"chain">>]}},
+  'GetContract' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","pubkey"},
+                    {"description","Contract pubkey to get proof for"},
+                    {"required",true},
+                    {"schema",
+                     [{"type","string"},
+                      {"example",
+                       "ct_TV5KbBYdjw1ufKWvAtNNjUnagvRmWMMugFzLKzmLASXB5iH1E"}]}]],
+              path => <<"/v3/contracts/{pubkey}">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> =>
+                              <<"/components/schemas/ContractObject">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => undefined},
+              tags => [<<"external">>,<<"contract">>]}},
+  'PostChannelSlash' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/ChannelSlashTx">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/channels/slash">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
+  'GetNodeBeneficiary' =>
+      #{get =>
+            #{parameters => [],path => <<"/v3/debug/accounts/beneficiary">>,
+              responses =>
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/PubKey">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"node_info">>,<<"debug">>]}},
+  'GetTransactionByHash' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","hash"},
+                    {"description","The hash of the transaction"},
+                    {"required",true},
+                    {"schema",
+                     [{"type","string"},
+                      {"example",
+                       "th_2w75xjDjHEmphsHDSXrThRnPx6hSUiS7hhSRcuytJABZZ2KkdG"}]}]],
+              path => <<"/v3/transactions/{hash}">>,
+              responses =>
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/SignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"transaction">>]}},
   'GetOracleQueriesByPubkey' =>
       #{get =>
             #{parameters =>
@@ -244,23 +552,7 @@ operations() ->
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"external">>,<<"oracle">>]}},
-  'GetCurrentGeneration' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/generations/current">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/Generation">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"chain">>]}},
-  'PostOracleQuery' =>
+  'PostContractCreate' =>
       #{post =>
             #{parameters =>
                   [[{"in","body"},
@@ -268,7 +560,7 @@ operations() ->
                     {"required",true},
                     {"schema",
                      #{<<"$ref">> =>
-                           <<"/components/schemas/OracleQueryTx">>}}],
+                           <<"/components/schemas/ContractCreateTx">>}}],
                    [{"in","query"},
                     {"name","int-as-string"},
                     {"description",
@@ -276,62 +568,115 @@ operations() ->
                     {"required",false},
                     {"type","boolean"},
                     {"default",false}]],
-              path => <<"/v3/debug/oracles/query">>,
+              path => <<"/v3/debug/contracts/create">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> =>
+                              <<"/components/schemas/CreateContractUnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"contract">>,<<"debug">>]}},
+  'GetChainEnds' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/status/chain-ends">>,
+              responses =>
+                  #{200 =>
+                        #{<<"items">> =>
+                              #{<<"$ref">> =>
+                                    <<"/components/schemas/EncodedHash">>},
+                          <<"type">> => <<"array">>}},
+              tags => [<<"external">>,<<"chain">>]}},
+  'GetNameEntryByName' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","name"},
+                    {"description","The name key of the name entry"},
+                    {"required",true},
+                    {"type","string"},
+                    {"example","dimitar.chain"}]],
+              path => <<"/v3/names/{name}">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/NameEntry">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"name_service">>]}},
+  'PostNamePreclaim' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/NamePreclaimTx">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/names/preclaim">>,
               responses =>
                   #{200 =>
                         #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"oracle">>,<<"debug">>]}},
-  'GetKeyBlockByHeight' =>
-      #{get =>
+              tags => [<<"internal">>,<<"name_service">>,<<"debug">>]}},
+  'PostChannelDeposit' =>
+      #{post =>
             #{parameters =>
-                  [[{"in","query"},
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/ChannelDepositTx">>}}],
+                   [{"in","query"},
                     {"name","int-as-string"},
                     {"description",
                      "If this flag is set to true, the response will have all integers set as strings"},
                     {"required",false},
                     {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","height"},
-                    {"description","The height"},
-                    {"required",true},
-                    {"schema",
-                     [{"type","integer"},
-                      {"minimum",0},
-                      {"maximum",18446744073709552000},
-                      {"example",42}]}]],
-              path => <<"/v3/key-blocks/height/{height}">>,
-              responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/KeyBlock">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"chain">>]}},
-  'GetGenerationByHeight' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","height"},
-                    {"description","The height"},
-                    {"required",true},
-                    {"schema",
-                     [{"type","integer"},
-                      {"minimum",0},
-                      {"maximum",18446744073709552000},
-                      {"example",42}]}]],
-              path => <<"/v3/generations/height/{height}">>,
+                    {"default",false}]],
+              path => <<"/v3/debug/channels/deposit">>,
               responses =>
                   #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/Generation">>},
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
+  'GetNodePubkey' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/accounts/node">>,
+              responses =>
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/PubKey">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"chain">>]}},
+              tags => [<<"internal">>,<<"node_info">>,<<"debug">>]}},
   'PostNameRevoke' =>
       #{post =>
             #{parameters =>
@@ -354,48 +699,29 @@ operations() ->
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"internal">>,<<"name_service">>,<<"debug">>]}},
-  'GetMicroBlockHeaderByHash' =>
-      #{get =>
+  'PostContractCall' =>
+      #{post =>
             #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","hash"},
-                    {"description",
-                     "The hash of the block - either a keyblock or a microblock"},
+                  [[{"in","body"},
+                    {"name","body"},
                     {"required",true},
                     {"schema",
-                     [{"type","string"},
-                      {"example",
-                       "kh_2ikjGFZGFpE99mDtsgkGFsTCqpPpXZRNRa5Pic989FJLcJStgx"}]}]],
-              path => <<"/v3/micro-blocks/hash/{hash}/header">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> =>
-                              <<"/components/schemas/MicroBlockHeader">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"chain">>]}},
-  'GetCurrentKeyBlock' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/ContractCallTx">>}}],
+                   [{"in","query"},
                     {"name","int-as-string"},
                     {"description",
                      "If this flag is set to true, the response will have all integers set as strings"},
                     {"required",false},
                     {"type","boolean"},
                     {"default",false}]],
-              path => <<"/v3/key-blocks/current">>,
+              path => <<"/v3/debug/contracts/call">>,
               responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/KeyBlock">>},
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"chain">>]}},
+              tags => [<<"internal">>,<<"contract">>,<<"debug">>]}},
   'GetTokenSupplyByHeight' =>
       #{get =>
             #{parameters =>
@@ -421,7 +747,76 @@ operations() ->
                         #{<<"$ref">> => <<"/components/schemas/TokenSupply">>},
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"internal">>,<<"debug">>]}},
-  'GetAccountByPubkey' =>
+  'GetPendingTransactions' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/transactions/pending">>,
+              responses =>
+                  #{200 =>
+                        #{<<"properties">> =>
+                              #{<<"transactions">> =>
+                                    #{<<"items">> =>
+                                          #{<<"$ref">> =>
+                                                <<"/components/schemas/SignedTx">>},
+                                      <<"type">> => <<"array">>}}}},
+              tags => [<<"internal">>,<<"transaction">>,<<"debug">>]}},
+  'GetMicroBlockTransactionByHashAndIndex' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","hash"},
+                    {"description","The hash of the micro block"},
+                    {"required",true},
+                    {"schema",
+                     [{"type","string"},
+                      {"example",
+                       "mh_ZCWcnCG5YF2LhQMTmZ5K5rRmGxatgc5YWxDpGNy2YBAHP6urH"}]}],
+                   [{"in","path"},
+                    {"name","index"},
+                    {"description","The index of the transaction in a block"},
+                    {"required",true},
+                    {"type","integer"},
+                    {"minimum",1},
+                    {"example",1}]],
+              path =>
+                  <<"/v3/micro-blocks/hash/{hash}/transactions/index/{index}">>,
+              responses =>
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/SignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"chain">>]}},
+  'GetNetworkStatus' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/network">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> =>
+                              <<"/components/schemas/NetworkStatus">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"node_info">>,<<"debug">>]}},
+  'GetPendingAccountTransactionsByPubkey' =>
       #{get =>
             #{parameters =>
                   [[{"in","query"},
@@ -439,250 +834,18 @@ operations() ->
                      [{"type","string"},
                       {"example",
                        "ak_dArxCkAsk1mZB1L9CX3cdz1GDN4hN84L3Q8dMLHN4v8cU85TF"}]}]],
-              path => <<"/v3/accounts/{pubkey}">>,
+              path => <<"/v3/accounts/{pubkey}/transactions/pending">>,
               responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/Account">>},
+                  #{200 =>
+                        #{<<"properties">> =>
+                              #{<<"transactions">> =>
+                                    #{<<"items">> =>
+                                          #{<<"$ref">> =>
+                                                <<"/components/schemas/SignedTx">>},
+                                      <<"type">> => <<"array">>}}},
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"external">>,<<"account">>]}},
-  'GetContractCode' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","pubkey"},
-                    {"description","Contract pubkey to get proof for"},
-                    {"required",true},
-                    {"schema",
-                     [{"type","string"},
-                      {"example",
-                       "ct_TV5KbBYdjw1ufKWvAtNNjUnagvRmWMMugFzLKzmLASXB5iH1E"}]}]],
-              path => <<"/v3/contracts/{pubkey}/code">>,
-              responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/ByteCode">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"contract">>]}},
-  'PostChannelSettle' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/ChannelSettleTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/channels/settle">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
-  'GetNodePubkey' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/accounts/node">>,
-              responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/PubKey">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"node_info">>,<<"debug">>]}},
-  'GetTransactionInfoByHash' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","hash"},
-                    {"description","The hash of the transaction"},
-                    {"required",true},
-                    {"schema",
-                     [{"type","string"},
-                      {"example",
-                       "th_2w75xjDjHEmphsHDSXrThRnPx6hSUiS7hhSRcuytJABZZ2KkdG"}]}]],
-              path => <<"/v3/transactions/{hash}/info">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> =>
-                              <<"/components/schemas/TxInfoObject">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"transaction">>]}},
-  'GetOracleQueryByPubkeyAndQueryId' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","pubkey"},
-                    {"description","The public key of the oracle"},
-                    {"required",true},
-                    {"schema",
-                     [{"type","string"},
-                      {"example",
-                       "ok_24jcHLTZQfsou7NvomRJ1hKEnjyNqbYSq2Az7DmyrAyUHPq8uR"}]}],
-                   [{"in","path"},
-                    {"name","query-id"},
-                    {"description","The ID of the query"},
-                    {"required",true},
-                    {"type","string"},
-                    {"example",
-                     "oq_q3UrSagF6JfgvAwMiLa6yyEoerx6tQC87m5X8W98NrdDArNZH"}]],
-              path => <<"/v3/oracles/{pubkey}/queries/{query-id}">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/OracleQuery">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"oracle">>]}},
-  'PostContractCall' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/ContractCallTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/contracts/call">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"contract">>,<<"debug">>]}},
-  'PostKeyBlock' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"description","Mined key block"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> => <<"/components/schemas/KeyBlock">>}}]],
-              path => <<"/v3/key-blocks">>,
-              responses =>
-                  #{200 => undefined,
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"chain">>]}},
-  'GetChannelByPubkey' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","pubkey"},
-                    {"description","The pubkey of the channel"},
-                    {"required",true},
-                    {"type","string"},
-                    {"example",
-                     "ch_2tceSwiqxgBcPirX3VYgW3sXgQdJeHjrNWHhLWyfZL7pT4gZF4"}]],
-              path => <<"/v3/channels/{pubkey}">>,
-              responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/Channel">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"channel">>]}},
-  'PostNameClaim' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> => <<"/components/schemas/NameClaimTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/names/claim">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"name_service">>,<<"debug">>]}},
-  'PostChannelWithdraw' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/ChannelWithdrawTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/channels/withdraw">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
-  'GetPeers' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/peers">>,
-              responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/Peers">>},
-                    403 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"node_info">>,<<"debug">>]}},
   'PostSpend' =>
       #{post =>
             #{parameters =>
@@ -706,7 +869,7 @@ operations() ->
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"internal">>,<<"transaction">>,<<"debug">>]}},
-  'PostOracleRegister' =>
+  'PostChannelCloseSolo' =>
       #{post =>
             #{parameters =>
                   [[{"in","body"},
@@ -714,7 +877,7 @@ operations() ->
                     {"required",true},
                     {"schema",
                      #{<<"$ref">> =>
-                           <<"/components/schemas/OracleRegisterTx">>}}],
+                           <<"/components/schemas/ChannelCloseSoloTx">>}}],
                    [{"in","query"},
                     {"name","int-as-string"},
                     {"description",
@@ -722,7 +885,158 @@ operations() ->
                     {"required",false},
                     {"type","boolean"},
                     {"default",false}]],
-              path => <<"/v3/debug/oracles/register">>,
+              path => <<"/v3/debug/channels/close/solo">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
+  'GetPeers' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/peers">>,
+              responses =>
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/Peers">>},
+                    403 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"node_info">>,<<"debug">>]}},
+  'GetStatus' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/status">>,
+              responses =>
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/Status">>}},
+              tags => [<<"external">>,<<"node_info">>]}},
+  'PostChannelSnapshotSolo' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/ChannelSnapshotSoloTx">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/channels/snapshot/solo">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
+  'GetAccountByPubkeyAndHeight' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","pubkey"},
+                    {"description","The public key of the account"},
+                    {"required",true},
+                    {"schema",
+                     [{"type","string"},
+                      {"example",
+                       "ak_dArxCkAsk1mZB1L9CX3cdz1GDN4hN84L3Q8dMLHN4v8cU85TF"}]}],
+                   [{"in","path"},
+                    {"name","height"},
+                    {"description","The height"},
+                    {"required",true},
+                    {"schema",
+                     [{"type","integer"},
+                      {"minimum",0},
+                      {"maximum",18446744073709552000},
+                      {"example",42}]}]],
+              path => <<"/v3/accounts/{pubkey}/height/{height}">>,
+              responses =>
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/Account">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"account">>]}},
+  'PostChannelCloseMutual' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/ChannelCloseMutualTx">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/channels/close/mutual">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
+  'PostOracleRespond' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/OracleRespondTx">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/oracles/respond">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"oracle">>,<<"debug">>]}},
+  'PostOracleQuery' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/OracleQueryTx">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/oracles/query">>,
               responses =>
                   #{200 =>
                         #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
@@ -757,60 +1071,7 @@ operations() ->
                               <<"/components/schemas/CommitmentId">>},
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"internal">>,<<"name_service">>,<<"debug">>]}},
-  'GetMicroBlockTransactionsCountByHash' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","hash"},
-                    {"description","The hash of the micro block"},
-                    {"required",true},
-                    {"schema",
-                     [{"type","string"},
-                      {"example",
-                       "mh_ZCWcnCG5YF2LhQMTmZ5K5rRmGxatgc5YWxDpGNy2YBAHP6urH"}]}]],
-              path => <<"/v3/micro-blocks/hash/{hash}/transactions/count">>,
-              responses =>
-                  #{200 =>
-                        #{<<"properties">> =>
-                              #{<<"count">> =>
-                                    #{<<"$ref">> =>
-                                          <<"/components/schemas/UInt32">>}},
-                          <<"type">> => <<"object">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"chain">>]}},
-  'PostContractCreate' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/ContractCreateTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/contracts/create">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> =>
-                              <<"/components/schemas/CreateContractUnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"contract">>,<<"debug">>]}},
-  'GetTransactionByHash' =>
+  'GetTransactionInfoByHash' =>
       #{get =>
             #{parameters =>
                   [[{"in","query"},
@@ -828,81 +1089,15 @@ operations() ->
                      [{"type","string"},
                       {"example",
                        "th_2w75xjDjHEmphsHDSXrThRnPx6hSUiS7hhSRcuytJABZZ2KkdG"}]}]],
-              path => <<"/v3/transactions/{hash}">>,
-              responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/SignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"transaction">>]}},
-  'PostChannelCreate' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/ChannelCreateTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/channels/create">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
-  'PostChannelSlash' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/ChannelSlashTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/channels/slash">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
-  'DryRunTxs' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"description","transactions"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> => <<"/components/schemas/DryRunInput">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/transactions/dry-run">>,
+              path => <<"/v3/transactions/{hash}/info">>,
               responses =>
                   #{200 =>
                         #{<<"$ref">> =>
-                              <<"/components/schemas/DryRunResults">>},
-                    403 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"debug">>]}},
-  'GetChainEnds' =>
+                              <<"/components/schemas/TxInfoObject">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"transaction">>]}},
+  'GetMicroBlockHeaderByHash' =>
       #{get =>
             #{parameters =>
                   [[{"in","query"},
@@ -911,37 +1106,24 @@ operations() ->
                      "If this flag is set to true, the response will have all integers set as strings"},
                     {"required",false},
                     {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/status/chain-ends">>,
-              responses =>
-                  #{200 =>
-                        #{<<"items">> =>
-                              #{<<"$ref">> =>
-                                    <<"/components/schemas/EncodedHash">>},
-                          <<"type">> => <<"array">>}},
-              tags => [<<"external">>,<<"chain">>]}},
-  'PostChannelCloseMutual' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","hash"},
+                    {"description",
+                     "The hash of the block - either a keyblock or a microblock"},
                     {"required",true},
                     {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/ChannelCloseMutualTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/channels/close/mutual">>,
+                     [{"type","string"},
+                      {"example",
+                       "kh_2ikjGFZGFpE99mDtsgkGFsTCqpPpXZRNRa5Pic989FJLcJStgx"}]}]],
+              path => <<"/v3/micro-blocks/hash/{hash}/header">>,
               responses =>
                   #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
+                        #{<<"$ref">> =>
+                              <<"/components/schemas/MicroBlockHeader">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"chain">>]}},
   'GetAccountByPubkeyAndHash' =>
       #{get =>
             #{parameters =>
@@ -975,81 +1157,6 @@ operations() ->
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"external">>,<<"account">>]}},
-  'PostChannelCloseSolo' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/ChannelCloseSoloTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/channels/close/solo">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
-  'PostNamePreclaim' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/NamePreclaimTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/names/preclaim">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"name_service">>,<<"debug">>]}},
-  'PostOracleRespond' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/OracleRespondTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/oracles/respond">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"oracle">>,<<"debug">>]}},
-  'GetNodeBeneficiary' =>
-      #{get =>
-            #{parameters => [],path => <<"/v3/debug/accounts/beneficiary">>,
-              responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/PubKey">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"node_info">>,<<"debug">>]}},
   'PostTransaction' =>
       #{post =>
             #{parameters =>
@@ -1073,6 +1180,35 @@ operations() ->
                               <<"/components/schemas/PostTxResponse">>},
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"external">>,<<"transaction">>]}},
+  'PostKeyBlock' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"description","Mined key block"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> => <<"/components/schemas/KeyBlock">>}}]],
+              path => <<"/v3/key-blocks">>,
+              responses =>
+                  #{200 => undefined,
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"chain">>]}},
+  'GetPeerPubkey' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/peers/pubkey">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/PeerPubKey">>}},
+              tags => [<<"external">>,<<"node_info">>]}},
   'GetMicroBlockTransactionsByHash' =>
       #{get =>
             #{parameters =>
@@ -1103,141 +1239,7 @@ operations() ->
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"external">>,<<"chain">>]}},
-  'GetTopHeader' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/headers/top">>,
-              responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/Header">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"chain">>]}},
-  'GetPendingAccountTransactionsByPubkey' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","pubkey"},
-                    {"description","The public key of the account"},
-                    {"required",true},
-                    {"schema",
-                     [{"type","string"},
-                      {"example",
-                       "ak_dArxCkAsk1mZB1L9CX3cdz1GDN4hN84L3Q8dMLHN4v8cU85TF"}]}]],
-              path => <<"/v3/accounts/{pubkey}/transactions/pending">>,
-              responses =>
-                  #{200 =>
-                        #{<<"properties">> =>
-                              #{<<"transactions">> =>
-                                    #{<<"items">> =>
-                                          #{<<"$ref">> =>
-                                                <<"/components/schemas/SignedTx">>},
-                                      <<"type">> => <<"array">>}}},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"account">>]}},
-  'GetContract' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","pubkey"},
-                    {"description","Contract pubkey to get proof for"},
-                    {"required",true},
-                    {"schema",
-                     [{"type","string"},
-                      {"example",
-                       "ct_TV5KbBYdjw1ufKWvAtNNjUnagvRmWMMugFzLKzmLASXB5iH1E"}]}]],
-              path => <<"/v3/contracts/{pubkey}">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> =>
-                              <<"/components/schemas/ContractObject">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => undefined},
-              tags => [<<"external">>,<<"contract">>]}},
-  'GetNetworkStatus' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/network">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> =>
-                              <<"/components/schemas/NetworkStatus">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"node_info">>,<<"debug">>]}},
-  'GetStatus' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/status">>,
-              responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/Status">>}},
-              tags => [<<"external">>,<<"node_info">>]}},
-  'GetMicroBlockTransactionByHashAndIndex' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","hash"},
-                    {"description","The hash of the micro block"},
-                    {"required",true},
-                    {"schema",
-                     [{"type","string"},
-                      {"example",
-                       "mh_ZCWcnCG5YF2LhQMTmZ5K5rRmGxatgc5YWxDpGNy2YBAHP6urH"}]}],
-                   [{"in","path"},
-                    {"name","index"},
-                    {"description","The index of the transaction in a block"},
-                    {"required",true},
-                    {"type","integer"},
-                    {"minimum",1},
-                    {"example",1}]],
-              path =>
-                  <<"/v3/micro-blocks/hash/{hash}/transactions/index/{index}">>,
-              responses =>
-                  #{200 => #{<<"$ref">> => <<"/components/schemas/SignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"chain">>]}},
-  'PostChannelSnapshotSolo' =>
+  'PostChannelWithdraw' =>
       #{post =>
             #{parameters =>
                   [[{"in","body"},
@@ -1245,7 +1247,7 @@ operations() ->
                     {"required",true},
                     {"schema",
                      #{<<"$ref">> =>
-                           <<"/components/schemas/ChannelSnapshotSoloTx">>}}],
+                           <<"/components/schemas/ChannelWithdrawTx">>}}],
                    [{"in","query"},
                     {"name","int-as-string"},
                     {"description",
@@ -1253,12 +1255,80 @@ operations() ->
                     {"required",false},
                     {"type","boolean"},
                     {"default",false}]],
-              path => <<"/v3/debug/channels/snapshot/solo">>,
+              path => <<"/v3/debug/channels/withdraw">>,
               responses =>
                   #{200 =>
                         #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
+  'PostNameClaim' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> => <<"/components/schemas/NameClaimTx">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/names/claim">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"name_service">>,<<"debug">>]}},
+  'GetChannelByPubkey' =>
+      #{get =>
+            #{parameters =>
+                  [[{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}],
+                   [{"in","path"},
+                    {"name","pubkey"},
+                    {"description","The pubkey of the channel"},
+                    {"required",true},
+                    {"type","string"},
+                    {"example",
+                     "ch_2tceSwiqxgBcPirX3VYgW3sXgQdJeHjrNWHhLWyfZL7pT4gZF4"}]],
+              path => <<"/v3/channels/{pubkey}">>,
+              responses =>
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/Channel">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"external">>,<<"channel">>]}},
+  'PostOracleRegister' =>
+      #{post =>
+            #{parameters =>
+                  [[{"in","body"},
+                    {"name","body"},
+                    {"required",true},
+                    {"schema",
+                     #{<<"$ref">> =>
+                           <<"/components/schemas/OracleRegisterTx">>}}],
+                   [{"in","query"},
+                    {"name","int-as-string"},
+                    {"description",
+                     "If this flag is set to true, the response will have all integers set as strings"},
+                    {"required",false},
+                    {"type","boolean"},
+                    {"default",false}]],
+              path => <<"/v3/debug/oracles/register">>,
+              responses =>
+                  #{200 =>
+                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
+                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"oracle">>,<<"debug">>]}},
   'PostNameUpdate' =>
       #{post =>
             #{parameters =>
@@ -1281,22 +1351,7 @@ operations() ->
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"internal">>,<<"name_service">>,<<"debug">>]}},
-  'GetPeerPubkey' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/peers/pubkey">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/PeerPubKey">>}},
-              tags => [<<"external">>,<<"node_info">>]}},
-  'PostOracleExtend' =>
+  'PostChannelSettle' =>
       #{post =>
             #{parameters =>
                   [[{"in","body"},
@@ -1304,7 +1359,7 @@ operations() ->
                     {"required",true},
                     {"schema",
                      #{<<"$ref">> =>
-                           <<"/components/schemas/OracleExtendTx">>}}],
+                           <<"/components/schemas/ChannelSettleTx">>}}],
                    [{"in","query"},
                     {"name","int-as-string"},
                     {"description",
@@ -1312,37 +1367,13 @@ operations() ->
                     {"required",false},
                     {"type","boolean"},
                     {"default",false}]],
-              path => <<"/v3/debug/oracles/extend">>,
+              path => <<"/v3/debug/channels/settle">>,
               responses =>
                   #{200 =>
                         #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"oracle">>,<<"debug">>]}},
-  'PostNameTransfer' =>
-      #{post =>
-            #{parameters =>
-                  [[{"in","body"},
-                    {"name","body"},
-                    {"required",true},
-                    {"schema",
-                     #{<<"$ref">> =>
-                           <<"/components/schemas/NameTransferTx">>}}],
-                   [{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}]],
-              path => <<"/v3/debug/names/transfer">>,
-              responses =>
-                  #{200 =>
-                        #{<<"$ref">> => <<"/components/schemas/UnsignedTx">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
-                    404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"internal">>,<<"name_service">>,<<"debug">>]}},
-  'GetPendingTransactions' =>
+                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
+              tags => [<<"internal">>,<<"channel">>,<<"debug">>]}},
+  'GetCurrentGeneration' =>
       #{get =>
             #{parameters =>
                   [[{"in","query"},
@@ -1352,42 +1383,13 @@ operations() ->
                     {"required",false},
                     {"type","boolean"},
                     {"default",false}]],
-              path => <<"/v3/debug/transactions/pending">>,
-              responses =>
-                  #{200 =>
-                        #{<<"properties">> =>
-                              #{<<"transactions">> =>
-                                    #{<<"items">> =>
-                                          #{<<"$ref">> =>
-                                                <<"/components/schemas/SignedTx">>},
-                                      <<"type">> => <<"array">>}}}},
-              tags => [<<"internal">>,<<"transaction">>,<<"debug">>]}},
-  'GetGenerationByHash' =>
-      #{get =>
-            #{parameters =>
-                  [[{"in","query"},
-                    {"name","int-as-string"},
-                    {"description",
-                     "If this flag is set to true, the response will have all integers set as strings"},
-                    {"required",false},
-                    {"type","boolean"},
-                    {"default",false}],
-                   [{"in","path"},
-                    {"name","hash"},
-                    {"description","The hash of the key block"},
-                    {"required",true},
-                    {"schema",
-                     [{"type","string"},
-                      {"example",
-                       "kh_2ikjGFZGFpE99mDtsgkGFsTCqpPpXZRNRa5Pic989FJLcJStgx"}]}]],
-              path => <<"/v3/generations/hash/{hash}">>,
+              path => <<"/v3/generations/current">>,
               responses =>
                   #{200 =>
                         #{<<"$ref">> => <<"/components/schemas/Generation">>},
-                    400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
               tags => [<<"external">>,<<"chain">>]}},
-  'GetOracleByPubkey' =>
+  'GetContractPoI' =>
       #{get =>
             #{parameters =>
                   [[{"in","query"},
@@ -1399,20 +1401,18 @@ operations() ->
                     {"default",false}],
                    [{"in","path"},
                     {"name","pubkey"},
-                    {"description","The public key of the oracle"},
+                    {"description","Contract pubkey to get proof for"},
                     {"required",true},
                     {"schema",
                      [{"type","string"},
                       {"example",
-                       "ok_24jcHLTZQfsou7NvomRJ1hKEnjyNqbYSq2Az7DmyrAyUHPq8uR"}]}]],
-              path => <<"/v3/oracles/{pubkey}">>,
+                       "ct_TV5KbBYdjw1ufKWvAtNNjUnagvRmWMMugFzLKzmLASXB5iH1E"}]}]],
+              path => <<"/v3/contracts/{pubkey}/poi">>,
               responses =>
-                  #{200 =>
-                        #{<<"$ref">> =>
-                              <<"/components/schemas/RegisteredOracle">>},
+                  #{200 => #{<<"$ref">> => <<"/components/schemas/PoI">>},
                     400 => #{<<"$ref">> => <<"/components/schemas/Error">>},
                     404 => #{<<"$ref">> => <<"/components/schemas/Error">>}},
-              tags => [<<"external">>,<<"oracle">>]}}}.
+              tags => [<<"external">>,<<"contract">>]}}}.
 
 definitions_prefix() ->
     "/components/schemas/".
