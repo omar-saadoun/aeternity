@@ -438,7 +438,7 @@ state_pre_transform_key_node(KeyNode, _PrevNode, PrevKeyNode, Trees1) ->
             ParentHash = get_pos_header_parent_hash(Header),
             Delegates = aehc_utils:delegates(ParentHash),
             %% TODO: actually hardcode the encoding
-            Arg1 = ["[", lists:join(", ", [aeser_api_encoder:encode(account_pubkey, X)  || X <- Delegates]), "]"],
+            Arg1 = ["[", lists:join(", ", [X  || X <- Delegates]), "]"],
             Arg2 = lists:flatten([integer_to_list(X,16) || <<X:4>> <= ParentHash]),
             Call = lists:flatten(io_lib:format("get_leader(~s, #~s)", [Arg1, Arg2])),
             io:format(user, "Election: ~p\n", [Call]),
@@ -487,10 +487,10 @@ ensure_hc_activation_criteria_at_trees(TxEnv, Trees,
     #activation_criteria{ minimum_delegates = MinimumDelegates
                         , minimum_stake = MinimumStake
                         }) ->
-    try case { static_contract_call(Trees, TxEnv, "balance()")
-         , static_contract_call(Trees, TxEnv, "unique_delegates_count()") } of
+    case { static_contract_call(Trees, TxEnv, "balance()")
+        , static_contract_call(Trees, TxEnv, "unique_delegates_count()") } of
+        %% TODO (temporary hack, must'n be in production)
 %%        {{ok, _Stake}, {ok, _Delegates}} ->
-%%             TODO (temporary hack, must'n be in production)
 %%            ok;
         {{ok, Stake}, {ok, Delegates}} when Stake >= MinimumStake, Delegates >= MinimumDelegates ->
             ok;
@@ -500,10 +500,6 @@ ensure_hc_activation_criteria_at_trees(TxEnv, Trees,
             {error, not_enough_delegates};
         {Err, _} -> {error, {failed_call, Err}};
         {_, Err} -> {error, {failed_call, Err}}
-    end
-    catch E:R:S ->
-        lager:info("~nensure_hc_activation_criteria_at_trees -> ~p ~p ~p~n",[E, R, S]),
-        {error, {E, R}}
     end.
 
 state_pre_transform_micro_node(_Node, _PrevNode, _PrevKeyNode, Trees) -> Trees.
@@ -521,8 +517,6 @@ pogf_detected(_H1, _H2) -> ok. %% TODO: we can't punish for forks due to forking
 %% -------------------------------------------------------------------
 %% Genesis block
 genesis_transform_trees(Trees0, #{}) ->
-    %%% TODO
-    lager:info("~nGenesis access ===========~n"),
     %% At genesis no ordinary user could possibly deploy the contract
     case get_predeploy_address() of
         {ok, Address} ->
@@ -577,7 +571,7 @@ genesis_target() ->
 -define(FAKE_BLOCK_HASH, <<0:?BLOCK_HEADER_HASH_BYTES/unit:8>>).
 -define(FAKE_STATE_HASH, <<1337:?STATE_HASH_BYTES/unit:8>>).
 new_unmined_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol, InfoField, TreesIn) ->
-    lager:info("~nHere: ~p==================~n",[?LINE]),
+    lager:info("~nNew key node: from: ~p==================~n",[aeser_api_encoder:encode(account_pubkey, Beneficiary)]),
     %% Ok this will be really funny
     %% First we need to determine whether we are a PoS or PoW block
     %% If the PrevKeyNode is a PoS block then we are a PoS block
@@ -598,27 +592,31 @@ new_unmined_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol
     PowNode = aec_chain_state:wrap_header(Header, ?FAKE_BLOCK_HASH),
     case is_hc_pos_header(aec_block_insertion:node_header(PrevKeyNode)) of
         true ->
-            lager:info("~nHere: ~p==================~n",[?LINE]),
+            lager:info("~nPoS header: ~p==================~n",[PowNode]),
             new_pos_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol, InfoField, TreesIn);
         false -> %% PoW block or a switchover block
-            lager:info("~nHere: ~p==================~n",[?LINE]),
+            lager:info("~nPoW: header ~p==================~n",[PowNode]),
             case get_hc_activation_criteria() of
-                error -> PowNode;
                 {ok, #activation_criteria{check_frequency = Frequency}} when Height rem Frequency =:= 0 ->
-                    lager:info("~nHere: ~p==================~n",[?LINE]),
                     case ensure_hc_activation_criteria(PowNode, node_tx_env(PowNode), TreesIn) of
-                        {error, _} = R -> lager:info("~nHere: ~p ~p==================~n",[?LINE, R]), PowNode;
+                        {error, _} = R ->
+                            lager:info("~nActivation criteria: ~p==================~n",[R]),
+                            PowNode;
                         ok ->
-                            lager:info("~nHere: ~p==================~n",[?LINE]),
+                            lager:info("~nActivation criteria has passed: ~p==================~n",[?LINE]),
                             new_pos_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol, InfoField, TreesIn)
                     end;
-                _ -> %% Not at a possible activation point
-                    lager:info("~nHere: ~p==================~n",[?LINE]),
+                {ok, _} ->
+                    %% Not at a possible activation point
+                    lager:info("~nActivation point skipped at height==================~n",[Height]),
+                    PowNode;
+                error ->
                     PowNode
             end
     end.
 
 new_pos_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol, InfoField, _TreesIn) ->
+    lager:info("~nNew PoS key node: from: ~p==================~n",[aeser_api_encoder:encode(account_pubkey, Beneficiary)]),
     %% TODO: PoGF - for now just ignore generational fraud - let's first get a basic version working
     %%       When handling PoGF the commitment point is in a different place than usual
     %% TODO: Miner vs Delegate, Which shall register?
@@ -640,7 +638,7 @@ new_pos_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol, In
     R = aec_chain_state:wrap_header(Header, ?FAKE_BLOCK_HASH),
     %% TODO To reflect Tx pool in debug (stake should be reflected here)
     %% TODO To consider stake via config
-    lager:info("~nThe new keyblock: (hash: ~p) (time: ~p) (miner: ~p)~n",
+    lager:info("~nThe new PoS keyblock: (hash: ~p) (time: ~p) (miner: ~p)~n",
         [
             aeser_api_encoder:encode(key_block_hash, aec_headers:prev_key_hash(Header)),
             aec_headers:time_in_secs(Header),
@@ -649,7 +647,7 @@ new_pos_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol, In
     R.
 
 keyblocks_for_unmined_keyblock_adjust() ->
-    %% TODO
+    %% TODO fix keyblocks_for_target_calc/0
     M = fallback_consensus(), lager:info("~nfallback_consensus: ~p~n",[M]), 1.
 %%    max(1, M:keyblocks_for_target_calc()).
 
@@ -1038,7 +1036,8 @@ static_staking_contract_call_on_block_hash(BlockHash, Query) ->
 %% Protocol calls at genesis are disallowed - it's impossible for the staking contract to be active at genesis
 protocol_staking_contract_call(Trees0, TxEnv, Query) ->
     Aci = get_staking_contract_aci(),
-    {ok, ContractPubkey} = get_staking_contract_address(), io:format(user, "~nAci: ~p~nQuery: ~p~n",[Aci, Query]),
+    {ok, ContractPubkey} = get_staking_contract_address(),
+    lager:info("~nContract call (Aci ~p)~n(Query: ~p)~n",[Aci, Query]),
     {ok, CallData} = aeaci_aci:encode_call_data(Aci, Query),
     Accounts0 = aec_trees:accounts(Trees0),
     SavedAccount = case aec_accounts_trees:lookup(?RESTRICTED_ACCOUNT, Accounts0) of
@@ -1082,8 +1081,3 @@ protocol_staking_contract_call(Trees0, TxEnv, Query) ->
 %% TODO: customize
 fallback_consensus() ->
     aec_consensus_bitcoin_ng.
-
-%% kyiv_1      | 22:14:54.505 [warning] Mnesia activity Type=transaction exit with Reason={aborted,{{badmatch,empty},[{aehc_consensus_hyperchains,new_pos_key_node,8,[{file,"/app/apps/aehyperchains/src/aehc_consensus_hyperchains.erl"},{line,616}]},{aec_chain_state,'-calculate_new_unmined_keyblock/5-fun-0-',5,[{file,"/app/apps/aecore/src/aec_chain_state.erl"},{line,275}]},{aec_db,'-do_activity/2-fun-8-',1,[{file,"/app/apps/aecore/src/aec_db.erl"},{line,1244}]},{mnesia_tm,apply_fun,3,[{file,"mnesia_tm.erl"},{line,842}]},{mnesia_tm,execute_transaction,5,[{file,"mnesia_tm.erl"},{line,818}]},{mnesia,wrap_trans,6,[{file,"mnesia.erl"},{line,495}]},{aec_db,do_activity,2,[{file,"/app/apps/aecore/src/aec_db.erl"},{line,1243}]},{aec_db,try_activity,4,[{file,"/app/apps/aecore/src/aec_db.erl"},{line,1223}]}]}}, retrying
-
-%%Query: "get_leader([ak_2DCqqHd2L1dbuJd5HaVx2Jwhr66dcQkz96q7tv7qfiKweEJunc, ak_2pXfr2fj6mbu5gxvp2bck6pEH5UL2B5T1MhgTSJduCcSsXKTNM], #506172656E7420626C6F636B20325F4141414141414141414141414141414141)"
-%%Election: "get_leader([ak_CePkdYpD55Q2VvZCHnaRBTDfHUPHw7CMvfpFHJ13XT91uF3SUTTLPjgMiVuF1yZqTmEEeCKDmWc9uv], #0000000FDC9BAB13367658891192FA58D260B08A1C2F71671D5FD9)"
