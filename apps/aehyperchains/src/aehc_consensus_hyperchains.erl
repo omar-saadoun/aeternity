@@ -490,8 +490,8 @@ ensure_hc_activation_criteria_at_trees(TxEnv, Trees,
     case { static_contract_call(Trees, TxEnv, "balance()")
         , static_contract_call(Trees, TxEnv, "unique_delegates_count()") } of
         %% TODO (temporary hack, must'n be in production)
-%%        {{ok, _Stake}, {ok, _Delegates}} ->
-%%            ok;
+        {{ok, _Stake}, {ok, _Delegates}} ->
+            ok;
         {{ok, Stake}, {ok, Delegates}} when Stake >= MinimumStake, Delegates >= MinimumDelegates ->
             ok;
         {{ok, Stake}, _} when Stake < MinimumStake ->
@@ -608,7 +608,7 @@ new_unmined_key_node(PrevNode, PrevKeyNode, Height, Miner, Beneficiary, Protocol
                     end;
                 {ok, _} ->
                     %% Not at a possible activation point
-                    lager:info("~nActivation point skipped at height==================~n",[Height]),
+                    lager:info("~nActivation point skipped at height: ~p==================~n",[Height]),
                     PowNode;
                 error ->
                     PowNode
