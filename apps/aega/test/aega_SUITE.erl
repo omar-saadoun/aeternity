@@ -330,8 +330,8 @@ simple_contract_call(_Cfg) ->
 
     AuthOpts2 = #{ prep_fun => fun(_) -> simple_auth(["123", "2"]) end },
     {ok, #{tx_res := ok, call_res := ok, call_val := Val}} =
-        ?call(ga_call, Acc1, AuthOpts2, Ct, "identity", "main", ["42"]),
-    ?assertMatchABI("42", 42, decode_call_result("identity", "main", ok, Val)),
+        ?call(ga_call, Acc1, AuthOpts2, Ct, "identity", "main_", ["42"]),
+    ?assertMatchABI("42", 42, decode_call_result("identity", "main_", ok, Val)),
 
     ok.
 
@@ -412,8 +412,8 @@ basic_contract_call(_Cfg) ->
 
     AuthOpts2 = #{ prep_fun => fun(TxHash) -> ?call(basic_auth, Acc1, "2", TxHash) end },
     {ok, #{call_res := ok, call_val := Val}} =
-        ?call(ga_call, Acc1, AuthOpts2, Ct, "identity", "main", ["42"]),
-    ?assertMatchABI("42", 42, decode_call_result("identity", "main", ok, Val)),
+        ?call(ga_call, Acc1, AuthOpts2, Ct, "identity", "main_", ["42"]),
+    ?assertMatchABI("42", 42, decode_call_result("identity", "main_", ok, Val)),
 
     ok.
 
@@ -492,8 +492,8 @@ tx_check(_Cfg) ->
         ?call(ga_create, Acc1, Auth("1"), "identity", []),
 
     {ok, #{call_res := ok, call_val := Val}} =
-        ?call(ga_call, Acc1, Auth("2"), Ct, "identity", "main", ["42"]),
-    ?assertMatchABI("42", 42, decode_call_result("identity", "main", ok, Val)),
+        ?call(ga_call, Acc1, Auth("2"), Ct, "identity", "main_", ["42"]),
+    ?assertMatchABI("42", 42, decode_call_result("identity", "main_", ok, Val)),
 
     PreBalance  = ?call(account_balance, Acc2),
     {ok, #{tx_res := ok}} =
@@ -563,8 +563,8 @@ bitcoin_contract_call(_Cfg) ->
 
     AuthOpts2 = #{ prep_fun => fun(TxHash) -> ?call(bitcoin_auth, Acc1, "2", TxHash) end },
     {ok, #{call_res := ok, call_val := Val}} =
-        ?call(ga_call, Acc1, AuthOpts2, Ct, "identity", "main", ["42"]),
-    ?assertMatchABI("42", 42, decode_call_result("identity", "main", ok, Val)),
+        ?call(ga_call, Acc1, AuthOpts2, Ct, "identity", "main_", ["42"]),
+    ?assertMatchABI("42", 42, decode_call_result("identity", "main_", ok, Val)),
 
     ok.
 
@@ -619,8 +619,8 @@ ethereum_contract_call(_Cfg) ->
 
     AuthOpts2 = #{ prep_fun => fun(TxHash) -> ?call(ethereum_auth, Acc1, "2", TxHash) end },
     {ok, #{call_res := ok, call_val := Val}} =
-        ?call(ga_call, Acc1, AuthOpts2, Ct, "identity", "main", ["42"]),
-    ?assertMatchABI("42", 42, decode_call_result("identity", "main", ok, Val)),
+        ?call(ga_call, Acc1, AuthOpts2, Ct, "identity", "main_", ["42"]),
+    ?assertMatchABI("42", 42, decode_call_result("identity", "main_", ok, Val)),
 
     ok.
 
@@ -986,7 +986,7 @@ channel_force_progress(_Cfg) ->
     {CtId, OffState1} = aega_test_utils:add_contract(Acc1, ?call(dry_run, contract_create, {"identity", []}), OffState),
 
     {ok, #{tx_res := ok, round := 4, call_res := ok}} =
-        ?call(ga_channel_force_progress, Acc1, Auth("2"), ChId, OffState1, CtId, "identity", "main", ["42"]),
+        ?call(ga_channel_force_progress, Acc1, Auth("2"), ChId, OffState1, CtId, "identity", "main_", ["42"]),
 
     ok.
 
